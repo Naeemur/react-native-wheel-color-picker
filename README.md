@@ -11,7 +11,7 @@ A color picker component for react native.
 
 ![Demo Image](https://naeemur.github.io/asset-bucket/rn-wheel-color-picker.gif)
 
-(This demo uses [react-native-advanced-ripple](../react-native-advanced-ripple) and [react-native-elevation](../react-native-elevation) modules.)
+(This demo uses my [react-native-advanced-ripple](https://github.com/Naeemur/react-native-advanced-ripple) and [react-native-elevation](https://github.com/Naeemur/react-native-elevation) modules.)
 
 ## Installation
 
