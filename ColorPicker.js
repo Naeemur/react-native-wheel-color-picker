@@ -259,7 +259,10 @@ module.exports = class ColorPicker extends Component {
 				},
 				null,
 			],
-			{listener: this.updateHueSaturation}
+			{
+				useNativeDriver: false,
+				listener: this.updateHueSaturation
+			}
 		)
 		this.sliderMovement = new Animated.event(
 			[
@@ -271,7 +274,10 @@ module.exports = class ColorPicker extends Component {
 				},
 				null,
 			],
-			{listener: this.updateValue}
+			{
+				useNativeDriver: false,
+				listener: this.updateValue
+			}
 		)
 		this.renderSwatches()
 		this.renderDiscs()
@@ -286,6 +292,7 @@ module.exports = class ColorPicker extends Component {
 		this.swatchAnim[i].stopAnimation()
 		Animated.timing(this.swatchAnim[i], {
 			toValue: 1,
+			useNativeDriver: false,
 			duration: 500,
 		}).start(x=>{
 			this.swatchAnim[i].setValue(0)
@@ -296,6 +303,7 @@ module.exports = class ColorPicker extends Component {
 		this.discAnim[i].stopAnimation()
 		Animated.timing(this.discAnim[i], {
 			toValue: 1,
+			useNativeDriver: false,
 			duration: 500,
 		}).start(x=>{
 			this.discAnim[i].setValue(0)
@@ -451,12 +459,12 @@ module.exports = class ColorPicker extends Component {
 		if (this.props.onColorChangeComplete) this.props.onColorChangeComplete(hsv2Hex(hsv))
 		let anims = []
 		if(who_hs||!specific) anims.push(//{//
-			Animated.spring(this.panX, { toValue: left, friction: 90 }),//.start()//
-			Animated.spring(this.panY, { toValue: top, friction: 90 }),//.start()//
+			Animated.spring(this.panX, { toValue: left, useNativeDriver: false, friction: 90 }),//.start()//
+			Animated.spring(this.panY, { toValue: top, useNativeDriver: false, friction: 90 }),//.start()//
 		)//}//
 		if(who_v||!specific) anims.push(//{//
-			Animated.spring(this.slideX, { toValue: range, friction: 90 }),//.start()//
-			Animated.spring(this.slideY, { toValue: range, friction: 90 }),//.start()//
+			Animated.spring(this.slideX, { toValue: range, useNativeDriver: false, friction: 90 }),//.start()//
+			Animated.spring(this.slideY, { toValue: range, useNativeDriver: false, friction: 90 }),//.start()//
 		)//}//
 		Animated.parallel(anims).start()
 	}
