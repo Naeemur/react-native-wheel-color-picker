@@ -534,7 +534,7 @@ module.exports = class ColorPicker extends Component {
 			left: row?0:this.slideX,
 			top: row?this.slideY:0,
 			// transform: [row?{translateX:8}:{translateY:8}],
-			backgroundColor: hex,
+			backgroundColor: hsv,
 			borderRadius: sliderSize/2,
 			height: sliderSize,
 			width: sliderSize,
