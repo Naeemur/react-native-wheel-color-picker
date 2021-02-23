@@ -390,8 +390,10 @@ module.exports = class ColorPicker extends Component {
 	updateHueSaturation = ({nativeEvent}) => {
 		const {deg, radius} = this.polar(nativeEvent), h = deg, s = 100 * radius, v = this.color.v
 		// if(radius > 1 ) return
-		const hsv = {h,s,v}
+		const hsv = {h,s,v: 100}
 		const currentColor = hsv2Hex(hsv)
+		this.slideX.setValue(0)
+		this.slideY.setValue(0)
 		this.color = hsv
 		this.setState({hsv, currentColor, hueSaturation: hsv2Hex(this.color.h,this.color.s,100)})
 		this.props.onColorChange(hsv2Hex(hsv))
