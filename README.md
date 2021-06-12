@@ -77,6 +77,12 @@ export default App
 
 `color: '#ffffff'` color of the color picker
 
+`shadeWheelThumb: true` if true the wheel thumb color is shaded
+
+`shadeSliderThumb: false` if true the slider thumb color is shaded
+
+`autoResetSlider: false` if true the slider thumb is reset to 0 value when wheel thumb is moved
+
 `onColorChange: () => {}` callback function for slider and wheel thumb movement 
 
 `onColorChangeComplete: () => {}` callback function for when the slider and wheel thumb stops moving
@@ -87,7 +93,7 @@ export default App
 ## License
 The MIT License (MIT)
 
-Copyright (c) 2020 Md. Naeemur Rahman (https://naeemur.github.io)
+Copyright (c) 2021 Md. Naeemur Rahman (https://naeemur.github.io)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

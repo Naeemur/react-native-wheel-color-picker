@@ -169,6 +169,9 @@ module.exports = class ColorPicker extends Component {
 		swatchesLast: true,
 		swatchesOnly: false,
 		color: '#ffffff',
+		shadeWheelThumb: true,
+		shadeSliderThumb: false,
+		autoResetSlider: false,
 		onColorChange: () => {},
 		onColorChangeComplete: () => {},
 	}
@@ -191,6 +194,8 @@ module.exports = class ColorPicker extends Component {
 			return true
 		},
 		onPanResponderMove: (event, gestureState) => {
+			if(event && event.nativeEvent && typeof event.nativeEvent.preventDefault == 'function') event.nativeEvent.preventDefault()
+			if(event && event.nativeEvent && typeof event.nativeEvent.stopPropagation == 'function') event.nativeEvent.stopPropagation()
 			if (this.outOfWheel(event.nativeEvent) || this.outOfBox(this.wheelMeasure, gestureState)) return;
 			this.wheelMovement(event, gestureState)
 		},
@@ -225,6 +230,8 @@ module.exports = class ColorPicker extends Component {
 			return true
 		},
 		onPanResponderMove: (event, gestureState) => {
+			if(event && event.nativeEvent && typeof event.nativeEvent.preventDefault == 'function') event.nativeEvent.preventDefault()
+			if(event && event.nativeEvent && typeof event.nativeEvent.stopPropagation == 'function') event.nativeEvent.stopPropagation()
 			if (this.outOfSlider(event.nativeEvent) || this.outOfBox(this.sliderMeasure, gestureState)) return;
 			this.sliderMovement(event, gestureState)
 		},
@@ -390,10 +397,13 @@ module.exports = class ColorPicker extends Component {
 	updateHueSaturation = ({nativeEvent}) => {
 		const {deg, radius} = this.polar(nativeEvent), h = deg, s = 100 * radius, v = this.color.v
 		// if(radius > 1 ) return
-		const hsv = {h,s,v: 100}
+		const hsv = {h,s,v}// v: 100} // causes bug
+		if(this.props.autoResetSlider === true) {
+			this.slideX.setValue(0)
+			this.slideY.setValue(0)
+			hsv.v = 100
+		}
 		const currentColor = hsv2Hex(hsv)
-		this.slideX.setValue(0)
-		this.slideY.setValue(0)
 		this.color = hsv
 		this.setState({hsv, currentColor, hueSaturation: hsv2Hex(this.color.h,this.color.s,100)})
 		this.props.onColorChange(hsv2Hex(hsv))
@@ -474,6 +484,10 @@ module.exports = class ColorPicker extends Component {
 	// 	const { color } = nextProps
 	// 	if(color !== this.props.color) this.animate(color)
 	// }
+	componentDidUpdate(prevProps) {
+		const { color } = this.props
+		if(color !== prevProps.color) this.animate(color)
+	}
 	revert() {
 		if(this.mounted) this.animate(this.props.color)
 	}
@@ -521,7 +535,7 @@ module.exports = class ColorPicker extends Component {
 			width: thumbSize,
 			height: thumbSize,
 			borderRadius: thumbSize / 2,
-			backgroundColor: hsv,
+			backgroundColor: this.props.shadeWheelThumb === true ? hsv: hex,
 			transform: [{translateX:-thumbSize/2},{translateY:-thumbSize/2}],
 			left: this.panX,
 			top: this.panY,
@@ -536,7 +550,7 @@ module.exports = class ColorPicker extends Component {
 			left: row?0:this.slideX,
 			top: row?this.slideY:0,
 			// transform: [row?{translateX:8}:{translateY:8}],
-			backgroundColor: hsv,
+			backgroundColor: this.props.shadeSliderThumb === true ? hsv: hex,
 			borderRadius: sliderSize/2,
 			height: sliderSize,
 			width: sliderSize,
