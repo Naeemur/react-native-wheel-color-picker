@@ -259,7 +259,10 @@ module.exports = class ColorPicker extends Component {
 				},
 				null,
 			],
-			{listener: this.updateHueSaturation}
+			{
+				useNativeDriver: false,
+				listener: this.updateHueSaturation
+			}
 		)
 		this.sliderMovement = new Animated.event(
 			[
@@ -271,7 +274,10 @@ module.exports = class ColorPicker extends Component {
 				},
 				null,
 			],
-			{listener: this.updateValue}
+			{
+				useNativeDriver: false,
+				listener: this.updateValue
+			}
 		)
 		this.renderSwatches()
 		this.renderDiscs()
@@ -286,6 +292,7 @@ module.exports = class ColorPicker extends Component {
 		this.swatchAnim[i].stopAnimation()
 		Animated.timing(this.swatchAnim[i], {
 			toValue: 1,
+			useNativeDriver: false,
 			duration: 500,
 		}).start(x=>{
 			this.swatchAnim[i].setValue(0)
@@ -296,6 +303,7 @@ module.exports = class ColorPicker extends Component {
 		this.discAnim[i].stopAnimation()
 		Animated.timing(this.discAnim[i], {
 			toValue: 1,
+			useNativeDriver: false,
 			duration: 500,
 		}).start(x=>{
 			this.discAnim[i].setValue(0)
@@ -382,8 +390,10 @@ module.exports = class ColorPicker extends Component {
 	updateHueSaturation = ({nativeEvent}) => {
 		const {deg, radius} = this.polar(nativeEvent), h = deg, s = 100 * radius, v = this.color.v
 		// if(radius > 1 ) return
-		const hsv = {h,s,v}
+		const hsv = {h,s,v: 100}
 		const currentColor = hsv2Hex(hsv)
+		this.slideX.setValue(0)
+		this.slideY.setValue(0)
 		this.color = hsv
 		this.setState({hsv, currentColor, hueSaturation: hsv2Hex(this.color.h,this.color.s,100)})
 		this.props.onColorChange(hsv2Hex(hsv))
@@ -451,12 +461,12 @@ module.exports = class ColorPicker extends Component {
 		if (this.props.onColorChangeComplete) this.props.onColorChangeComplete(hsv2Hex(hsv))
 		let anims = []
 		if(who_hs||!specific) anims.push(//{//
-			Animated.spring(this.panX, { toValue: left, friction: 90 }),//.start()//
-			Animated.spring(this.panY, { toValue: top, friction: 90 }),//.start()//
+			Animated.spring(this.panX, { toValue: left, useNativeDriver: false, friction: 90 }),//.start()//
+			Animated.spring(this.panY, { toValue: top, useNativeDriver: false, friction: 90 }),//.start()//
 		)//}//
 		if(who_v||!specific) anims.push(//{//
-			Animated.spring(this.slideX, { toValue: range, friction: 90 }),//.start()//
-			Animated.spring(this.slideY, { toValue: range, friction: 90 }),//.start()//
+			Animated.spring(this.slideX, { toValue: range, useNativeDriver: false, friction: 90 }),//.start()//
+			Animated.spring(this.slideY, { toValue: range, useNativeDriver: false, friction: 90 }),//.start()//
 		)//}//
 		Animated.parallel(anims).start()
 	}
@@ -526,7 +536,7 @@ module.exports = class ColorPicker extends Component {
 			left: row?0:this.slideX,
 			top: row?this.slideY:0,
 			// transform: [row?{translateX:8}:{translateY:8}],
-			backgroundColor: hex,
+			backgroundColor: hsv,
 			borderRadius: sliderSize/2,
 			height: sliderSize,
 			width: sliderSize,
