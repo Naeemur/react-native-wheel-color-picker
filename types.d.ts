@@ -13,8 +13,8 @@ export interface ColorPickerProps extends React.Props<ColorPicker> {
   shadeWheelThumb?: boolean,
   shadeSliderThumb?: boolean,
   autoResetSlider?: boolean,
-  onColorChange?: () => void,
-  onColorChangeComplete?: () => void,
+  onColorChange?: (color: string) => void,
+  onColorChangeComplete?: (color: string) => void,
 }
 
 declare class ColorPicker extends React.Component<ColorPickerProps, any> {
