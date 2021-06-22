@@ -83,9 +83,9 @@ export default App
 
 `autoResetSlider: false` if true the slider thumb is reset to 0 value when wheel thumb is moved
 
-`onColorChange: () => {}` callback function for slider and wheel thumb movement 
+`onColorChange: (color) => {}` callback function for slider and wheel thumb movement
 
-`onColorChangeComplete: () => {}` callback function for when the slider and wheel thumb stops moving
+`onColorChangeComplete: (color) => {}` callback function for when the slider and wheel thumb stops moving
 
 ## Instance methods
 `revert()` reverts the color to the one provided in the color prop
