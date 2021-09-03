@@ -67,6 +67,8 @@ export default App
 
 `sliderSize: 20` slider and slider color thumb size
 
+`gapSize: 20` size of gap between slider and wheel
+
 `discrete: false` use swatchs of shades instead of slider
 
 `swatches: true` show color swatches

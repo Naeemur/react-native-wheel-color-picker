@@ -9,6 +9,8 @@ export interface ColorPickerProps extends React.Props<ColorPicker> {
   thumbSize?: number,
   /** Slider and slider color thumb size */
   sliderSize?: number,
+  /** Gap size between wheel & slider */
+  gapSize?: number,
   /** Use swatchs of shades instead of slider */
   discrete?: boolean,
   /** Show color swatches */
