@@ -172,6 +172,7 @@ module.exports = class ColorPicker extends Component {
 		shadeWheelThumb: true,
 		shadeSliderThumb: false,
 		autoResetSlider: false,
+		onInteractionStart: () => {},
 		onColorChange: () => {},
 		onColorChangeComplete: () => {},
 	}
@@ -191,6 +192,7 @@ module.exports = class ColorPicker extends Component {
 			const x = x0 - locationX, y = y0 - locationY
 			this.wheelMeasure.x = x
 			this.wheelMeasure.y = y
+			this.props.onInteractionStart();
 			return true
 		},
 		onPanResponderMove: (event, gestureState) => {
@@ -227,6 +229,7 @@ module.exports = class ColorPicker extends Component {
 			const x = x0 - locationX, y = y0 - locationY
 			this.sliderMeasure.x = x
 			this.sliderMeasure.y = y
+			this.props.onInteractionStart();
 			return true
 		},
 		onPanResponderMove: (event, gestureState) => {
