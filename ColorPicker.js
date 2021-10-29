@@ -18,7 +18,7 @@ const srcWheel = require('./assets/graphics/ui/color-wheel.png')
 const srcSlider = require('./assets/graphics/ui/black-gradient.png')
 const srcSliderRotated = require('./assets/graphics/ui/black-gradient-rotated.png')
 
-const PALLETE = [
+const PALETTE = [
 	'#000000',
 	'#888888',
 	'#ed1c24',
@@ -157,8 +157,6 @@ module.exports = class ColorPicker extends Component {
 	sliderMeasure = {}
 	wheelMeasure = {}
 	wheelWidth = 0
-	swatchAnim = PALLETE.map((c,i) => (new Animated.Value(0)))
-	discAnim = PALLETE.map((c,i) => (new Animated.Value(0)))
 	static defaultProps = {
 		row: false,
 		noSnap: false,
@@ -169,6 +167,7 @@ module.exports = class ColorPicker extends Component {
 		swatchesLast: true,
 		swatchesOnly: false,
 		color: '#ffffff',
+		palette: PALETTE,
 		shadeWheelThumb: true,
 		shadeSliderThumb: false,
 		autoResetSlider: false,
@@ -286,6 +285,8 @@ module.exports = class ColorPicker extends Component {
 				listener: this.updateValue
 			}
 		)
+		this.swatchAnim = props.palette.map((c,i) => (new Animated.Value(0)))
+	    this.discAnim = props.palette.map((c,i) => (new Animated.Value(0)))
 		this.renderSwatches()
 		this.renderDiscs()
 	}
@@ -498,7 +499,7 @@ module.exports = class ColorPicker extends Component {
 		if(this.mounted) this.forceUpdate()
 	}
 	renderSwatches () {
-		this.swatches = PALLETE.map((c,i) => (
+		this.swatches = this.props.palette.map((c,i) => (
 			<View style={[ss.swatch,{backgroundColor:c}]} key={'S'+i}>
 				<TouchableWithoutFeedback onPress={x=>this.onSwatchPress(c,i)}>
 					<Animated.View style={[ss.swatchTouch,{backgroundColor:c,transform:[{scale:this.swatchAnim[i].interpolate({inputRange:[0,0.5,1],outputRange:[0.666,1,0.666]})}]}]} />
@@ -507,7 +508,7 @@ module.exports = class ColorPicker extends Component {
 		))
 	}
 	renderDiscs () {
-		this.disc = (`1`).repeat(10).split('').map((c,i) => (
+		this.disc = (`1`).repeat(this.props.palette.length).split('').map((c,i) => (
 			<View style={[ss.swatch,{backgroundColor:this.state.hueSaturation}]} key={'D'+i}>
 				<TouchableWithoutFeedback onPress={x=>this.onDiscPress(c,i)}>
 					<Animated.View style={[ss.swatchTouch,{backgroundColor:this.state.hueSaturation,transform:[{scale:this.discAnim[i].interpolate({inputRange:[0,0.5,1],outputRange:[0.666,1,0.666]})}]}]}>
