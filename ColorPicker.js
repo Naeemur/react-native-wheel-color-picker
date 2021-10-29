@@ -168,6 +168,7 @@ module.exports = class ColorPicker extends Component {
 		swatches: true,
 		swatchesLast: true,
 		swatchesOnly: false,
+		swatchesHitSlop: undefined,
 		color: '#ffffff',
 		shadeWheelThumb: true,
 		shadeSliderThumb: false,
@@ -499,8 +500,8 @@ module.exports = class ColorPicker extends Component {
 	}
 	renderSwatches () {
 		this.swatches = PALLETE.map((c,i) => (
-			<View style={[ss.swatch,{backgroundColor:c}]} key={'S'+i}>
-				<TouchableWithoutFeedback onPress={x=>this.onSwatchPress(c,i)}>
+			<View style={[ss.swatch,{backgroundColor:c}]} key={'S'+i} hitSlop={this.props.swatchesHitSlop}>
+				<TouchableWithoutFeedback onPress={x=>this.onSwatchPress(c,i)} hitSlop={this.props.swatchesHitSlop}>
 					<Animated.View style={[ss.swatchTouch,{backgroundColor:c,transform:[{scale:this.swatchAnim[i].interpolate({inputRange:[0,0.5,1],outputRange:[0.666,1,0.666]})}]}]} />
 				</TouchableWithoutFeedback>
 			</View>
