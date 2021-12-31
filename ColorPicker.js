@@ -164,6 +164,7 @@ module.exports = class ColorPicker extends Component {
 		noSnap: false,
 		thumbSize: 50,
 		sliderSize: 20,
+		gapSize: 16,
 		discrete: false,
 		swatches: true,
 		swatchesLast: true,
@@ -523,6 +524,7 @@ module.exports = class ColorPicker extends Component {
 			style,
 			thumbSize,
 			sliderSize,
+			gapSize,
 			swatchesLast,
 			swatchesOnly,
 			discrete,
@@ -533,7 +535,7 @@ module.exports = class ColorPicker extends Component {
 		const wheelPanHandlers = this.wheelPanResponder && this.wheelPanResponder.panHandlers || {}
 		const sliderPanHandlers = this.sliderPanResponder && this.sliderPanResponder.panHandlers || {}
 		const opacity = this.state.wheelOpacity// * this.state.sliderOpacity
-		const margin = swatchesOnly ? 0 : 16
+		const margin = swatchesOnly ? 0 : gapSize
 		const wheelThumbStyle = {
 			width: thumbSize,
 			height: thumbSize,
@@ -562,8 +564,8 @@ module.exports = class ColorPicker extends Component {
 		const sliderStyle = {
 			width:row?sliderSize:'100%',
 			height:row?'100%':sliderSize,
-			marginLeft:row?16:0,
-			marginTop:row?0:16,
+			marginLeft:row?gapSize:0,
+			marginTop:row?0:gapSize,
 			borderRadius:sliderSize/2,
 		}
 		const swatchStyle = {
