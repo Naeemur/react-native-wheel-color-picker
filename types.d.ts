@@ -17,8 +17,6 @@ export interface ColorPickerProps extends React.Props<ColorPicker> {
   swatchesLast?: boolean,
   /** Show swatch only and hide wheel and slider */
   swatchesOnly?: boolean,
-  /** Defines how far the touch event can start away from the swatch */
-  swatchesHitSlop?: {top: number, left: number, bottom: number, right: number},
   /** Color of the color picker */
   color?: string,
   /** If true the wheel thumb color is shaded */
