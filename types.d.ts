@@ -27,9 +27,11 @@ export interface ColorPickerProps extends React.Props<ColorPicker> {
   shadeSliderThumb?: boolean,
   /** If true the slider thumb is reset to 0 value when wheel thumb is moved */
   autoResetSlider?: boolean,
-  /** Callback function for slider and wheel thumb movement */
+  /** Callback function triggered when user begins dragging slider/wheel */
+  onInteractionStart?: () => void,
+  /** Callback function providing current color while user is actively dragging slider/wheel */
   onColorChange?: (color: string) => void,
-  /** Callback function for when the slider and wheel thumb stops moving */
+  /** Callback function providing final color when user stops dragging slider/wheel */
   onColorChangeComplete?: (color: string) => void,
 }
 
