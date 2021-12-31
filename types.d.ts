@@ -21,6 +21,8 @@ export interface ColorPickerProps extends React.Props<ColorPicker> {
   swatchesOnly?: boolean,
   /** Color of the color picker */
   color?: string,
+  /** Palette colors of swatches */
+  palette?: string[],
   /** If true the wheel thumb color is shaded */
   shadeWheelThumb?: boolean,
   /** If true the slider thumb color is shaded */

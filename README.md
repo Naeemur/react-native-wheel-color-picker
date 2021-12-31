@@ -79,6 +79,8 @@ export default App
 
 `color: '#ffffff'` color of the color picker
 
+`palette: ['#000000','#888888','#ed1c24','#d11cd5','#1633e6','#00aeef','#00c85d','#57ff0a','#ffde17','#f26522']` palette colors of swatches
+
 `shadeWheelThumb: true` if true the wheel thumb color is shaded
 
 `shadeSliderThumb: false` if true the slider thumb color is shaded
