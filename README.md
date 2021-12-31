@@ -71,11 +71,15 @@ export default App
 
 `discrete: false` use swatchs of shades instead of slider
 
+`discreteLength: 10` number of swatchs of shades
+
 `swatches: true` show color swatches
 
 `swatchesLast: true` if false swatches are shown before wheel
 
 `swatchesOnly: false` show swatch only and hide wheel and slider
+
+`swatchesHitSlop: undefined` defines how far the touch event can start away from the swatch
 
 `color: '#ffffff'` color of the color picker
 

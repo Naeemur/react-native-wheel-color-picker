@@ -169,9 +169,11 @@ module.exports = class ColorPicker extends Component {
 		sliderSize: 20,
 		gapSize: 16,
 		discrete: false,
+		discreteLength: 10,
 		swatches: true,
 		swatchesLast: true,
 		swatchesOnly: false,
+		swatchesHitSlop: undefined,
 		color: '#ffffff',
 		palette: PALETTE,
 		shadeWheelThumb: true,
@@ -295,7 +297,7 @@ module.exports = class ColorPicker extends Component {
 			}
 		)
 		this.swatchAnim = props.palette.map((c,i) => (new Animated.Value(0)))
-	    this.discAnim = props.palette.map((c,i) => (new Animated.Value(0)))
+		this.discAnim = (`1`).repeat(props.discreteLength).split('').map((c,i) => (new Animated.Value(0)))
 		this.renderSwatches()
 		this.renderDiscs()
 	}
@@ -510,15 +512,15 @@ module.exports = class ColorPicker extends Component {
 	}
 	renderSwatches () {
 		this.swatches = this.props.palette.map((c,i) => (
-			<View style={[ss.swatch,{backgroundColor:c}]} key={'S'+i}>
-				<TouchableWithoutFeedback onPress={x=>this.onSwatchPress(c,i)}>
+			<View style={[ss.swatch,{backgroundColor:c}]} key={'S'+i} hitSlop={this.props.swatchesHitSlop}>
+				<TouchableWithoutFeedback onPress={x=>this.onSwatchPress(c,i)} hitSlop={this.props.swatchesHitSlop}>
 					<Animated.View style={[ss.swatchTouch,{backgroundColor:c,transform:[{scale:this.swatchAnim[i].interpolate({inputRange:[0,0.5,1],outputRange:[0.666,1,0.666]})}]}]} />
 				</TouchableWithoutFeedback>
 			</View>
 		))
 	}
 	renderDiscs () {
-		this.disc = (`1`).repeat(this.props.palette.length).split('').map((c,i) => (
+		this.disc = (`1`).repeat(this.props.discreteLength).split('').map((c,i) => (
 			<View style={[ss.swatch,{backgroundColor:this.state.hueSaturation}]} key={'D'+i}>
 				<TouchableWithoutFeedback onPress={x=>this.onDiscPress(c,i)}>
 					<Animated.View style={[ss.swatchTouch,{backgroundColor:this.state.hueSaturation,transform:[{scale:this.discAnim[i].interpolate({inputRange:[0,0.5,1],outputRange:[0.666,1,0.666]})}]}]}>
