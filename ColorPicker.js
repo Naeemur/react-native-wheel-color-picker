@@ -143,6 +143,11 @@ const hex2Hsv = (hex) => {
 	return rgb2Hsv(rgb.r, rgb.g, rgb.b)
 }
 
+// expands hex to full 6 chars (#fff -> #ffffff) if necessary
+const expandColor = color => typeof color == 'string' && color.length === 4
+	? `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`
+	: color;
+
 
 module.exports = class ColorPicker extends Component {
 	// testData = {}
@@ -428,7 +433,7 @@ module.exports = class ColorPicker extends Component {
 	update = (color, who, max, force) => {
 		const isHex = /^#(([0-9a-f]{2}){3}|([0-9a-f]){3})$/i
 		if (!isHex.test(color)) color = '#ffffff'
-		if (color.length === 4) color = `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`
+		color = expandColor(color);
 		const specific = (typeof who == 'string'), who_hs = (who=='hs'), who_v = (who=='v')
 		let {h, s, v} = (typeof color == 'string') ? hex2Hsv(color) : color, stt = {}
 		h = (who_hs||!specific) ? h : this.color.h
@@ -457,6 +462,7 @@ module.exports = class ColorPicker extends Component {
 		}
 	}
 	animate = (color, who, max, force) => {
+		color = expandColor(color);
 		const specific = (typeof who == 'string'), who_hs = (who=='hs'), who_v = (who=='v')
 		let {h, s, v} = (typeof color == 'string') ? hex2Hsv(color) : color, stt = {}
 		h = (who_hs||!specific) ? h : this.color.h
