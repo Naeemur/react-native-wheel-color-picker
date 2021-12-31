@@ -75,8 +75,6 @@ export default App
 
 `swatchesOnly: false` show swatch only and hide wheel and slider
 
-`swatchesHitSlop: undefined` defines how far the touch event can start away from the swatch
-
 `color: '#ffffff'` color of the color picker
 
 `shadeWheelThumb: true` if true the wheel thumb color is shaded
