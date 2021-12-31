@@ -73,6 +73,8 @@ export default App
 
 `discreteLength: 10` number of swatchs of shades
 
+`sliderHidden: false` if true the slider is hidden
+
 `swatches: true` show color swatches
 
 `swatchesLast: true` if false swatches are shown before wheel

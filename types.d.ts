@@ -13,8 +13,10 @@ export interface ColorPickerProps extends React.Props<ColorPicker> {
   gapSize?: number,
   /** Use swatchs of shades instead of slider */
   discrete?: boolean,
-  /** number of swatchs of shades */
+  /** Number of swatchs of shades */
   discreteLength?: number,
+  /** If true the slider is hidden */
+  sliderHidden?: boolean,
   /** Show color swatches */
   swatches?: boolean,
   /** If false swatches are shown before wheel */

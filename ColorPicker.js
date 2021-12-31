@@ -163,25 +163,26 @@ module.exports = class ColorPicker extends Component {
 	wheelMeasure = {}
 	wheelWidth = 0
 	static defaultProps = {
-		row: false,
-		noSnap: false,
-		thumbSize: 50,
-		sliderSize: 20,
-		gapSize: 16,
-		discrete: false,
-		discreteLength: 10,
-		swatches: true,
-		swatchesLast: true,
-		swatchesOnly: false,
-		swatchesHitSlop: undefined,
-		color: '#ffffff',
-		palette: PALETTE,
-		shadeWheelThumb: true,
-		shadeSliderThumb: false,
-		autoResetSlider: false,
-		onInteractionStart: () => {},
-		onColorChange: () => {},
-		onColorChangeComplete: () => {},
+		row: false, // use row or vertical layout
+		noSnap: false, // enables snapping on the center of wheel and edges of wheel and slider
+		thumbSize: 50, // wheel color thumb size
+		sliderSize: 20, // slider and slider color thumb size
+		gapSize: 16, // size of gap between slider and wheel
+		discrete: false, // use swatchs of shades instead of slider
+		discreteLength: 10, // number of swatchs of shades
+		sliderHidden: false, // if true the slider is hidden
+		swatches: true, // show color swatches
+		swatchesLast: true, // if false swatches are shown before wheel
+		swatchesOnly: false, // show swatch only and hide wheel and slider
+		swatchesHitSlop: undefined, // defines how far the touch event can start away from the swatch
+		color: '#ffffff', //  color of the color picker
+		palette: PALETTE, // palette colors of swatches
+		shadeWheelThumb: true, // if true the wheel thumb color is shaded
+		shadeSliderThumb: false, // if true the slider thumb color is shaded
+		autoResetSlider: false, // if true the slider thumb is reset to 0 value when wheel thumb is moved
+		onInteractionStart: () => {}, // callback function triggered when user begins dragging slider/wheel
+		onColorChange: () => {}, // callback function providing current color while user is actively dragging slider/wheel
+		onColorChangeComplete: () => {}, // callback function providing final color when user stops dragging slider/wheel
 	}
 	wheelPanResponder = PanResponder.create({
 		onStartShouldSetPanResponderCapture: (event, gestureState) => {
@@ -521,8 +522,8 @@ module.exports = class ColorPicker extends Component {
 	}
 	renderDiscs () {
 		this.disc = (`1`).repeat(this.props.discreteLength).split('').map((c,i) => (
-			<View style={[ss.swatch,{backgroundColor:this.state.hueSaturation}]} key={'D'+i}>
-				<TouchableWithoutFeedback onPress={x=>this.onDiscPress(c,i)}>
+			<View style={[ss.swatch,{backgroundColor:this.state.hueSaturation}]} key={'D'+i} hitSlop={this.props.swatchesHitSlop}>
+				<TouchableWithoutFeedback onPress={x=>this.onDiscPress(c,i)} hitSlop={this.props.swatchesHitSlop}>
 					<Animated.View style={[ss.swatchTouch,{backgroundColor:this.state.hueSaturation,transform:[{scale:this.discAnim[i].interpolate({inputRange:[0,0.5,1],outputRange:[0.666,1,0.666]})}]}]}>
 						<View style={[ss.wheelImg,{backgroundColor:'#000',opacity:1-(i>=9?1:(i*11/100))}]}></View>
 					</Animated.View>
@@ -539,6 +540,7 @@ module.exports = class ColorPicker extends Component {
 			gapSize,
 			swatchesLast,
 			swatchesOnly,
+			sliderHidden,
 			discrete,
 			row,
 		} = this.props
@@ -606,7 +608,7 @@ module.exports = class ColorPicker extends Component {
 						</View>
 					</View> }
 				</View> }
-				{ !swatchesOnly && (discrete ? <View style={[ss.swatches,swatchStyle]} key={'$2'}>{ this.disc }</View> : <View style={[ss.slider,sliderStyle]} key={'$2'}>
+				{ !swatchesOnly && !sliderHidden && (discrete ? <View style={[ss.swatches,swatchStyle]} key={'$2'}>{ this.disc }</View> : <View style={[ss.slider,sliderStyle]} key={'$2'}>
 					<View style={[ss.grad,{backgroundColor:hex}]}>
 						<Image style={ss.sliderImg} source={row?srcSliderRotated:srcSlider} resizeMode="stretch" />
 					</View>
