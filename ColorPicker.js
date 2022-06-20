@@ -519,6 +519,7 @@ module.exports = class ColorPicker extends Component {
 				</TouchableWithoutFeedback>
 			</View>
 		))
+    return this.swatches
 	}
 	renderDiscs () {
 		this.disc = (`1`).repeat(this.props.discreteLength).split('').map((c,i) => (
@@ -595,6 +596,7 @@ module.exports = class ColorPicker extends Component {
 			marginRight:row?margin:0,
 			marginBottom:row?0:margin,
 		}
+    this.renderSwatches();
 		// console.log('RENDER >>',row,thumbSize,sliderSize)
 		return (
 			<View style={[ss.root,row?{flexDirection:'row'}:{},style]}>
