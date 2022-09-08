@@ -14,9 +14,9 @@ const {
 } = require('react-native')
 
 const Elevations = require('react-native-elevation')
-const srcWheel = require('../assets/graphics/ui/color-wheel.png')
-const srcSlider = require('../assets/graphics/ui/black-gradient.png')
-const srcSliderRotated = require('../assets/graphics/ui/black-gradient-rotated.png')
+const srcWheel = require('./assets/graphics/ui/color-wheel.png')
+const srcSlider = require('./assets/graphics/ui/black-gradient.png')
+const srcSliderRotated = require('./assets/graphics/ui/black-gradient-rotated.png')
 
 const PALETTE = [
 	'#000000',
