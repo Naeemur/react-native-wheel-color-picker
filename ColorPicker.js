@@ -14,9 +14,9 @@ const {
 } = require('react-native')
 
 const Elevations = require('react-native-elevation')
-const srcWheel = require('./assets/graphics/ui/color-wheel.png')
-const srcSlider = require('./assets/graphics/ui/black-gradient.png')
-const srcSliderRotated = require('./assets/graphics/ui/black-gradient-rotated.png')
+const srcWheel = require('../assets/graphics/ui/color-wheel.png')
+const srcSlider = require('../assets/graphics/ui/black-gradient.png')
+const srcSliderRotated = require('../assets/graphics/ui/black-gradient-rotated.png')
 
 const PALETTE = [
 	'#000000',
@@ -180,6 +180,7 @@ module.exports = class ColorPicker extends Component {
 		shadeWheelThumb: true, // if true the wheel thumb color is shaded
 		shadeSliderThumb: false, // if true the slider thumb color is shaded
 		autoResetSlider: false, // if true the slider thumb is reset to 0 value when wheel thumb is moved
+		swatchesSize: 16, // changes the swatches size
 		onInteractionStart: () => {}, // callback function triggered when user begins dragging slider/wheel
 		onColorChange: () => {}, // callback function providing current color while user is actively dragging slider/wheel
 		onColorChangeComplete: () => {}, // callback function providing final color when user stops dragging slider/wheel
@@ -512,8 +513,23 @@ module.exports = class ColorPicker extends Component {
 		if(this.mounted) this.forceUpdate()
 	}
 	renderSwatches () {
+
+    const {
+      swatchesSize,
+    } = this.props
+
+    const swatch =  {
+      width: swatchesSize,
+      height: swatchesSize,
+      borderRadius: swatchesSize,
+      // borderWidth: 1,
+      borderColor: '#8884',
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'visible',
+	  }
 		this.swatches = this.props.palette.map((c,i) => (
-			<View style={[ss.swatch,{backgroundColor:c}]} key={'S'+i} hitSlop={this.props.swatchesHitSlop}>
+			<View style={[swatch,{backgroundColor:c}]} key={'S'+i} hitSlop={this.props.swatchesHitSlop}>
 				<TouchableWithoutFeedback onPress={x=>this.onSwatchPress(c,i)} hitSlop={this.props.swatchesHitSlop}>
 					<Animated.View style={[ss.swatchTouch,{backgroundColor:c,transform:[{scale:this.swatchAnim[i].interpolate({inputRange:[0,0.5,1],outputRange:[0.666,1,0.666]})}]}]} />
 				</TouchableWithoutFeedback>
@@ -705,16 +721,6 @@ const ss = StyleSheet.create({
 		justifyContent: 'space-between',
 		marginTop: 16,
 		// padding: 16,
-	},
-	swatch: {
-		width: 20,
-		height: 20,
-		borderRadius: 10,
-		// borderWidth: 1,
-		borderColor: '#8884',
-		alignItems: 'center',
-		justifyContent: 'center',
-		overflow: 'visible',
 	},
 	swatchTouch: {
 		width: 30,
