@@ -344,24 +344,24 @@ module.exports = class ColorPicker extends Component {
 		* x and y are the distances to its previous element
 		* but in measureInWindow they are relative to the window
 		*/
-		this.wheel.measureInWindow((x, y, width, height) => {
+			let {x, y, width, height} = e.nativeEvent.layout
 			this.wheelMeasure = {x, y, width, height}
 			this.wheelSize = width
 			// this.panX.setOffset(-width/2)
 			// this.panY.setOffset(-width/2)
 			this.update(this.state.currentColor)
 			this.setState({wheelOpacity:1})
-		})
+		
 	}
 	onSliderLayout = (e) => {
-		this.slider.measureInWindow((x, y, width, height) => {
+			let {x, y, width, height} = e.nativeEvent.layout
 			this.sliderMeasure = {x, y, width, height}
 			this.sliderLength = this.props.row ? height-width : width-height
 			// this.slideX.setOffset(-width/2)
 			// this.slideY.setOffset(-width/2)
 			this.update(this.state.currentColor)
 			this.setState({sliderOpacity:1})
-		})
+	
 	}
 	outOfBox (measure, gestureState) {
 		const { x, y, width, height } = measure
