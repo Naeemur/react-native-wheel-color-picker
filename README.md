@@ -75,6 +75,8 @@ export default App
 
 `sliderHidden: false` if true the slider is hidden
 
+`wheelHidden: false` if true the wheel is hidden
+
 `swatches: true` show color swatches
 
 `swatchesLast: true` if false swatches are shown before wheel
