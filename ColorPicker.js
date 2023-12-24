@@ -171,6 +171,7 @@ module.exports = class ColorPicker extends Component {
 		discrete: false, // use swatchs of shades instead of slider
 		discreteLength: 10, // number of swatchs of shades
 		sliderHidden: false, // if true the slider is hidden
+		wheelHidden: false, // if true the wheel is hidden
 		swatches: true, // show color swatches
 		swatchesLast: true, // if false swatches are shown before wheel
 		swatchesOnly: false, // show swatch only and hide wheel and slider
@@ -600,7 +601,7 @@ module.exports = class ColorPicker extends Component {
 			<View style={[ss.root,row?{flexDirection:'row'}:{},style]}>
 				{ swatches && !swatchesLast && <View style={[ss.swatches,swatchStyle,swatchFirstStyle]} key={'SW'}>{ this.swatches }</View> }
 				{ !swatchesOnly && <View style={[ss.wheel]} key={'$1'} onLayout={this.onSquareLayout}>
-					{ this.wheelWidth>0 && <View style={[{padding:thumbSize/2,width:this.wheelWidth,height:this.wheelWidth}]}>
+					{ !this.wheelHidden && this.wheelWidth>0 && <View style={[{padding:thumbSize/2,width:this.wheelWidth,height:this.wheelWidth}]}>
 						<View style={[ss.wheelWrap]}>
 							<Image style={ss.wheelImg} source={srcWheel} />
 							<Animated.View style={[ss.wheelThumb,wheelThumbStyle,Elevations[4],{pointerEvents:'none'}]} />

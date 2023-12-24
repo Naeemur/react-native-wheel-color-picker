@@ -17,6 +17,8 @@ export interface ColorPickerProps extends React.Props<ColorPicker> {
   discreteLength?: number,
   /** If true the slider is hidden */
   sliderHidden?: boolean,
+  /** If true the wheel is hidden */
+  wheelHidden?: boolean,
   /** Show color swatches */
   swatches?: boolean,
   /** If false swatches are shown before wheel */
