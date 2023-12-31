@@ -23,7 +23,7 @@ npm install react-native-wheel-color-picker
 
 ```js
 import { Component } from 'react'
-import { View, Text } from 'react-native'
+import { View, Text, ActivityIndicator } from 'react-native'
 
 import ColorPicker from 'react-native-wheel-color-picker'
 
@@ -61,7 +61,7 @@ export default App
 ## Changelog
 
 ### 1.3.0
-- added changelog section to readme.md
+- added changelog section to README.md
 - prop added: `wheelLoadingIndicator`
 - prop added: `sliderLoadingIndicator`
 - prop added: `useNativeDriver`
