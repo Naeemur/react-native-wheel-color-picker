@@ -11,9 +11,9 @@ export interface ColorPickerProps extends React.Props<ColorPicker> {
   sliderSize?: number,
   /** Gap size between wheel & slider */
   gapSize?: number,
-  /** Use swatchs of shades instead of slider */
+  /** Use swatches of shades instead of slider */
   discrete?: boolean,
-  /** Number of swatchs of shades */
+  /** Number of swatches of shades, should be > 1 */
   discreteLength?: number,
   /** If true the slider is hidden */
   sliderHidden?: boolean,
@@ -41,6 +41,22 @@ export interface ColorPickerProps extends React.Props<ColorPicker> {
   onColorChange?: (color: string) => void,
   /** Callback function providing final color when user stops dragging slider/wheel */
   onColorChangeComplete?: (color: string) => void,
+  /** Wheel image loading component eg: <ActivityIndicator /> */
+  wheelLoadingIndicator?: React.ReactNode,
+  /** Slider image loading component eg: <ActivityIndicator /> */
+  sliderLoadingIndicator?: React.ReactNode,
+  /** To use useNativeDriver for animations */
+  useNativeDriver?: boolean,
+  /** To use onLayoutEvent.nativeEvent.layout instead of measureInWindow for x, y, width, height values for wheel and slider measurements which may be useful to prevent some layout problems */
+  useNativeLayout?: boolean,
+  /** Disable all interactions */
+  disabled?: boolean,
+  /** Flip touch positioning on X axis, might be useful in UI with RTL support */
+  flipTouchX?: boolean,
+  /** Flip touch positioning on Y axis, might be useful in UI with RTL support */
+  flipTouchY?: boolean,
+  /** If true the wheel is hidden, does not work with sliderHidden = true */
+  wheelHidden?: boolean,
 }
 
 declare class ColorPicker extends React.Component<ColorPickerProps, any> {

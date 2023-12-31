@@ -28,37 +28,70 @@ import { View, Text } from 'react-native'
 import ColorPicker from 'react-native-wheel-color-picker'
 
 class App extends Component {
-	render() {
-		return (
-			<View style={[]}>
-				<ColorPicker
-					ref={r => { this.picker = r }}
-					color={this.state.currentColor}
-					swatchesOnly={this.state.swatchesOnly}
-					onColorChange={this.onColorChange}
-					onColorChangeComplete={this.onColorChangeComplete}
-					thumbSize={40}
-					sliderSize={40}
-					noSnap={true}
-					row={false}
-					swatchesLast={this.state.swatchesLast}
-					swatches={this.state.swatchesEnabled}
-					discrete={this.state.disc}
-				/>
-				<SomeButton onPress={() => this.picker.revert()} />
-			</View>
-		)
-	}
+    render() {
+        return (
+            <View style={[]}>
+                <ColorPicker
+                    ref={r => { this.picker = r }}
+                    color={this.state.currentColor}
+                    swatchesOnly={this.state.swatchesOnly}
+                    onColorChange={this.onColorChange}
+                    onColorChangeComplete={this.onColorChangeComplete}
+                    thumbSize={40}
+                    sliderSize={40}
+                    noSnap={true}
+                    row={false}
+                    swatchesLast={this.state.swatchesLast}
+                    swatches={this.state.swatchesEnabled}
+                    discrete={this.state.disc}
+                    wheelLodingIndicator={<ActivityIndicator size={40} />}
+                    sliderLodingIndicator={<ActivityIndicator size={20} />}
+                    useNativeDriver={false}
+                    useNativeLayout={false}
+                />
+                <SomeButton onPress={() => this.picker.revert()} />
+            </View>
+        )
+    }
 }
 
 export default App
 ```
 
+## Changelog
+
+### 1.3.0
+- added changelog section to readme.md
+- prop added: `wheelLoadingIndicator`
+- prop added: `sliderLoadingIndicator`
+- prop added: `useNativeDriver`
+- prop added: `useNativeLayout`
+- prop added: `disabled`
+- prop added: `flipTouchX`
+- prop added: `flipTouchY`
+- prop added: `wheelHidden`
+- fixed a bug related to `discreteLength` prop
+- no breaking changes
+
+### 1.2.0
+- prop added: `gapSize`
+- prop added: `discreteLength`
+- prop added: `swatchesHitSlop`
+- prop added: `palette`
+- prop added: `onInteractionStart`
+- no breaking changes
+
+### 1.1.0
+- prop added: `shadeWheelThumb`
+- prop added: `shadeSliderThumb`
+- prop added: `autoResetSlider`
+- no breaking changes
+
 ## API
 
-## ***ColorPicker***
+### ***ColorPicker***
 
-## Component props and default values
+### Component props and default values
 `row: false` use row or vertical layout
 
 `noSnap: false` enables snapping on the center of wheel and edges of wheel and slider
@@ -69,9 +102,9 @@ export default App
 
 `gapSize: 16` size of gap between slider and wheel
 
-`discrete: false` use swatchs of shades instead of slider
+`discrete: false` use swatches of shades instead of slider
 
-`discreteLength: 10` number of swatchs of shades
+`discreteLength: 10` number of swatches of shades, should be > 1
 
 `sliderHidden: false` if true the slider is hidden
 
@@ -99,13 +132,29 @@ export default App
 
 `onColorChangeComplete: (color) => {}` callback function providing final color when user stops dragging slider/wheel
 
-## Instance methods
+`wheelLoadingIndicator: null` wheel image loading component eg: <ActivityIndicator />
+
+`sliderLoadingIndicator: null` slider image loading component eg: <ActivityIndicator />
+
+`useNativeDriver: false` to use useNativeDriver for animations
+
+`useNativeLayout: false` to use onLayoutEvent.nativeEvent.layout instead of measureInWindow for x, y, width, height values for wheel and slider measurements which may be useful to prevent some layout problems
+
+`disabled: false` disable all interactions
+
+`flipTouchX: false` flip touch positioning on X axis, might be useful in UI with RTL support
+
+`flipTouchY: false` flip touch positioning on Y axis, might be useful in UI with RTL support
+
+`wheelHidden: false` if true the wheel is hidden, does not work with sliderHidden = true
+
+### Instance methods
 `revert()` reverts the color to the one provided in the color prop
 
 ## License
 The MIT License (MIT)
 
-Copyright (c) 2021 Md. Naeemur Rahman (https://naeemur.github.io)
+Copyright (c) 2020-2024 Md. Naeemur Rahman (https://naeemur.github.io)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

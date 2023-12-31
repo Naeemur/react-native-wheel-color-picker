@@ -11,6 +11,7 @@ const {
 	TouchableWithoutFeedback,
 	View,
 	Text,
+	ActivityIndicator,
 } = require('react-native')
 
 const Elevations = require('react-native-elevation')
@@ -125,7 +126,7 @@ const rgb2Hex = (r, g, b) => {
 }
 
 const hex2Rgb = (hex) => {
-	let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+	let result = (/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i).exec(hex)
 	return result ? {
 		r: parseInt(result[1], 16),
 		g: parseInt(result[2], 16),
@@ -148,11 +149,17 @@ const expandColor = color => typeof color == 'string' && color.length === 4
 	? `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`
 	: color;
 
+const flipInterpolationConfig = {
+	inputRange: [1, 10],
+	outputRange: [-1, -10],
+	extrapolate: 'extend', // a string such as 'extend', 'identity', or 'clamp'
+}
+
 
 module.exports = class ColorPicker extends Component {
 	// testData = {}
 	// testView = {forceUpdate(){}}
-	color = {h:0,s:0,v:100}
+	color = { h: 0, s: 0, v: 100 }
 	slideX = new Animated.Value(0)
 	slideY = new Animated.Value(0)
 	panX = new Animated.Value(30)
@@ -168,8 +175,8 @@ module.exports = class ColorPicker extends Component {
 		thumbSize: 50, // wheel color thumb size
 		sliderSize: 20, // slider and slider color thumb size
 		gapSize: 16, // size of gap between slider and wheel
-		discrete: false, // use swatchs of shades instead of slider
-		discreteLength: 10, // number of swatchs of shades
+		discrete: false, // use swatches of shades instead of slider
+		discreteLength: 10, // number of swatches of shades, should be > 1
 		sliderHidden: false, // if true the slider is hidden
 		swatches: true, // show color swatches
 		swatchesLast: true, // if false swatches are shown before wheel
@@ -180,21 +187,31 @@ module.exports = class ColorPicker extends Component {
 		shadeWheelThumb: true, // if true the wheel thumb color is shaded
 		shadeSliderThumb: false, // if true the slider thumb color is shaded
 		autoResetSlider: false, // if true the slider thumb is reset to 0 value when wheel thumb is moved
-		onInteractionStart: () => {}, // callback function triggered when user begins dragging slider/wheel
-		onColorChange: () => {}, // callback function providing current color while user is actively dragging slider/wheel
-		onColorChangeComplete: () => {}, // callback function providing final color when user stops dragging slider/wheel
+		onInteractionStart: () => { }, // callback function triggered when user begins dragging slider/wheel
+		onColorChange: () => { }, // callback function providing current color while user is actively dragging slider/wheel
+		onColorChangeComplete: () => { }, // callback function providing final color when user stops dragging slider/wheel
+		wheelLoadingIndicator: null, // wheel image loading component eg: <ActivityIndicator />
+		sliderLoadingIndicator: null, // slider image loading component eg: <ActivityIndicator />
+		useNativeDriver: false, // to use useNativeDriver for animations
+		useNativeLayout: false, // to use onLayoutEvent.nativeEvent.layout instead of measureInWindow for x, y, width, height values for wheel and slider measurements which may be useful to prevent some layout problems
+		disabled: false, // disable all interactions
+		flipTouchX: false, // flip touch positioning on X axis, might be useful in UI with RTL support
+		flipTouchY: false, // flip touch positioning on Y axis, might be useful in UI with RTL support
+		wheelHidden: false, // if true the wheel is hidden, does not work with sliderHidden = true
 	}
 	wheelPanResponder = PanResponder.create({
 		onStartShouldSetPanResponderCapture: (event, gestureState) => {
-			const {nativeEvent} = event
+			if (this.props.disabled) return false;
+			const { nativeEvent } = event
 			if (this.outOfWheel(nativeEvent)) return
 			this.wheelMovement(event, gestureState)
-			this.updateHueSaturation({nativeEvent})
+			this.updateHueSaturation({ nativeEvent })
 			return true
 		},
 		onStartShouldSetPanResponder: () => true,
 		onMoveShouldSetPanResponderCapture: () => true,
 		onPanResponderGrant: (event, gestureState) => {
+			if (this.props.disabled) return;
 			const { locationX, locationY } = event.nativeEvent
 			const { moveX, moveY, x0, y0 } = gestureState
 			const x = x0 - locationX, y = y0 - locationY
@@ -204,34 +221,38 @@ module.exports = class ColorPicker extends Component {
 			return true
 		},
 		onPanResponderMove: (event, gestureState) => {
-			if(event && event.nativeEvent && typeof event.nativeEvent.preventDefault == 'function') event.nativeEvent.preventDefault()
-			if(event && event.nativeEvent && typeof event.nativeEvent.stopPropagation == 'function') event.nativeEvent.stopPropagation()
+			if (this.props.disabled) return;
+			if (event && event.nativeEvent && typeof event.nativeEvent.preventDefault == 'function') event.nativeEvent.preventDefault()
+			if (event && event.nativeEvent && typeof event.nativeEvent.stopPropagation == 'function') event.nativeEvent.stopPropagation()
 			if (this.outOfWheel(event.nativeEvent) || this.outOfBox(this.wheelMeasure, gestureState)) return;
 			this.wheelMovement(event, gestureState)
 		},
 		onMoveShouldSetPanResponder: () => true,
 		onPanResponderRelease: (event, gestureState) => {
-			const {nativeEvent} = event
-			const {radius} = this.polar(nativeEvent)
-			const {hsv} = this.state
-			const {h,s,v} = hsv
+			if (this.props.disabled) return;
+			const { nativeEvent } = event
+			const { radius } = this.polar(nativeEvent)
+			const { hsv } = this.state
+			const { h, s, v } = hsv
 			if (!this.props.noSnap && radius <= 0.10 && radius >= 0) this.animate('#ffffff', 'hs', false, true)
 			if (!this.props.noSnap && radius >= 0.95 && radius <= 1) this.animate(this.state.currentColor, 'hs', true)
 			if (this.props.onColorChangeComplete) this.props.onColorChangeComplete(hsv2Hex(hsv))
-			this.setState({currentColor:this.state.currentColor}, x=>this.renderDiscs())
+			this.setState({ currentColor: this.state.currentColor }, x => this.renderDiscs())
 		},
 	})
 	sliderPanResponder = PanResponder.create({
 		onStartShouldSetPanResponderCapture: (event, gestureState) => {
-			const {nativeEvent} = event
+			if (this.props.disabled) return false;
+			const { nativeEvent } = event
 			if (this.outOfSlider(nativeEvent)) return
 			this.sliderMovement(event, gestureState)
-			this.updateValue({nativeEvent})
+			this.updateValue({ nativeEvent })
 			return true
 		},
 		onStartShouldSetPanResponder: () => true,
 		onMoveShouldSetPanResponderCapture: () => true,
 		onPanResponderGrant: (event, gestureState) => {
+			if (this.props.disabled) return;
 			const { locationX, locationY } = event.nativeEvent
 			const { moveX, moveY, x0, y0 } = gestureState
 			const x = x0 - locationX, y = y0 - locationY
@@ -241,31 +262,42 @@ module.exports = class ColorPicker extends Component {
 			return true
 		},
 		onPanResponderMove: (event, gestureState) => {
-			if(event && event.nativeEvent && typeof event.nativeEvent.preventDefault == 'function') event.nativeEvent.preventDefault()
-			if(event && event.nativeEvent && typeof event.nativeEvent.stopPropagation == 'function') event.nativeEvent.stopPropagation()
+			if (this.props.disabled) return;
+			if (event && event.nativeEvent && typeof event.nativeEvent.preventDefault == 'function') event.nativeEvent.preventDefault()
+			if (event && event.nativeEvent && typeof event.nativeEvent.stopPropagation == 'function') event.nativeEvent.stopPropagation()
 			if (this.outOfSlider(event.nativeEvent) || this.outOfBox(this.sliderMeasure, gestureState)) return;
 			this.sliderMovement(event, gestureState)
 		},
 		onMoveShouldSetPanResponder: () => true,
 		onPanResponderRelease: (event, gestureState) => {
-			const {nativeEvent} = event
-			const {hsv} = this.state
-			const {h,s,v} = hsv
+			if (this.props.disabled) return;
+			const { nativeEvent } = event
+			const { hsv } = this.state
+			const { h, s, v } = hsv
 			const ratio = this.ratio(nativeEvent)
 			if (!this.props.noSnap && ratio <= 0.05 && ratio >= 0) this.animate(this.state.currentColor, 'v', false)
 			if (!this.props.noSnap && ratio >= 0.95 && ratio <= 1) this.animate(this.state.currentColor, 'v', true)
 			if (this.props.onColorChangeComplete) this.props.onColorChangeComplete(hsv2Hex(hsv))
 		},
 	})
-	constructor (props) {
+	constructor(props) {
 		super(props)
 		this.mounted = false
+		this.swatchesUpdatedAt = 0
+		this.discsUpdatedAt = 0
 		this.state = {
 			wheelOpacity: 0,
 			sliderOpacity: 0,
-			hueSaturation: hsv2Hex(this.color.h,this.color.s,100),
+			hueSaturation: hsv2Hex(this.color.h, this.color.s, 100),
 			currentColor: props.color,
-			hsv: {h:0,s:0,v:100},
+			hsv: { h: 0, s: 0, v: 100 },
+			wheelImageLoaded: false,
+			sliderImageLoaded: false,
+			palette: props.palette,
+			discreteLength: props.discreteLength,
+			swatchesHitSlop: props.swatchesHitSlop,
+			swatchesUpdatedAt: 0,
+			discsUpdatedAt: 0,
 		}
 		this.wheelMovement = new Animated.event(
 			[
@@ -278,7 +310,7 @@ module.exports = class ColorPicker extends Component {
 				null,
 			],
 			{
-				useNativeDriver: false,
+				useNativeDriver: !!props.useNativeDriver,
 				listener: this.updateHueSaturation
 			}
 		)
@@ -293,12 +325,12 @@ module.exports = class ColorPicker extends Component {
 				null,
 			],
 			{
-				useNativeDriver: false,
+				useNativeDriver: !!props.useNativeDriver,
 				listener: this.updateValue
 			}
 		)
-		this.swatchAnim = props.palette.map((c,i) => (new Animated.Value(0)))
-		this.discAnim = (`1`).repeat(props.discreteLength).split('').map((c,i) => (new Animated.Value(0)))
+		this.initSwatchAnimatedValues(props)
+		this.initDiscAnimatedValues(props)
 		this.renderSwatches()
 		this.renderDiscs()
 	}
@@ -308,96 +340,117 @@ module.exports = class ColorPicker extends Component {
 	componentWillUnmount() {
 		this.mounted = false;
 	}
-	onSwatchPress = (c,i) => {
+	onSwatchPress = (c, i) => {
+		if (this.props.disabled) return;
 		this.swatchAnim[i].stopAnimation()
 		Animated.timing(this.swatchAnim[i], {
 			toValue: 1,
-			useNativeDriver: false,
+			useNativeDriver: !!this.props.useNativeDriver,
 			duration: 500,
-		}).start(x=>{
+		}).start(x => {
 			this.swatchAnim[i].setValue(0)
 		})
 		this.animate(c)
 	}
-	onDiscPress = (c,i) => {
+	onDiscPress = (c, i) => {
+		if (this.props.disabled) return;
 		this.discAnim[i].stopAnimation()
 		Animated.timing(this.discAnim[i], {
 			toValue: 1,
-			useNativeDriver: false,
+			useNativeDriver: !!this.props.useNativeDriver,
 			duration: 500,
-		}).start(x=>{
+		}).start(x => {
 			this.discAnim[i].setValue(0)
 		})
-		const val = i>=9?100:11*i
-		this.updateValue({nativeEvent:null}, val)
-		this.animate({h:this.color.h,s:this.color.s,v:val}, 'v')
+		const val = i >= 9 ? 100 : 11 * i
+		this.updateValue({ nativeEvent: null }, val)
+		this.animate({ h: this.color.h, s: this.color.s, v: val }, 'v')
 	}
 	onSquareLayout = (e) => {
-		let {x, y, width, height} = e.nativeEvent.layout
+		let { x, y, width, height } = e.nativeEvent.layout
 		this.wheelWidth = Math.min(width, height)
 		this.tryForceUpdate()
+	}
+	onWheelImageLoad = (e) => {
+		this.setState({ wheelImageLoaded: true })
+	}
+	onSliderImageLoad = (e) => {
+		this.setState({ sliderImageLoaded: true })
 	}
 	onWheelLayout = (e) => {
 		/*
 		* const {x, y, width, height} = nativeEvent.layout
-		* onlayout values are different than measureInWindow
+		* onLayout values are different than measureInWindow
 		* x and y are the distances to its previous element
 		* but in measureInWindow they are relative to the window
 		*/
-		this.wheel.measureInWindow((x, y, width, height) => {
-			this.wheelMeasure = {x, y, width, height}
-			this.wheelSize = width
-			// this.panX.setOffset(-width/2)
-			// this.panY.setOffset(-width/2)
-			this.update(this.state.currentColor)
-			this.setState({wheelOpacity:1})
-		})
+		if (!!this.props.useNativeLayout) {
+			let {x, y, width, height} = e.nativeEvent.layout
+			this.setWheelMeasure(x, y, width, height)
+		} else {
+			this.wheel.measureInWindow(this.setWheelMeasure)
+		}
 	}
 	onSliderLayout = (e) => {
-		this.slider.measureInWindow((x, y, width, height) => {
-			this.sliderMeasure = {x, y, width, height}
-			this.sliderLength = this.props.row ? height-width : width-height
-			// this.slideX.setOffset(-width/2)
-			// this.slideY.setOffset(-width/2)
-			this.update(this.state.currentColor)
-			this.setState({sliderOpacity:1})
-		})
+		if (!!this.props.useNativeLayout) {
+			let {x, y, width, height} = e.nativeEvent.layout
+			this.setSliderMeasure(x, y, width, height)
+		} else {
+			this.slider.measureInWindow(this.setSliderMeasure)
+		}
 	}
-	outOfBox (measure, gestureState) {
+	setWheelMeasure = (x, y, width, height) => {
+		this.wheelMeasure = { x, y, width, height }
+		this.wheelSize = width
+		// this.panX.setOffset(-width/2)
+		// this.panY.setOffset(-width/2)
+		this.update(this.state.currentColor)
+		this.setState({ wheelOpacity: 1 })
+	}
+	setSliderMeasure = (x, y, width, height) => {
+		this.sliderMeasure = { x, y, width, height }
+		this.sliderLength = this.props.row ? height - width : width - height
+		// this.slideX.setOffset(-width/2)
+		// this.slideY.setOffset(-width/2)
+		this.update(this.state.currentColor)
+		this.setState({ sliderOpacity: 1 })
+	}
+	outOfBox(measure, gestureState) {
 		const { x, y, width, height } = measure
 		const { moveX, moveY, x0, y0 } = gestureState
 		// console.log(`${moveX} , ${moveY} / ${x} , ${y} / ${locationX} , ${locationY}`);
-		return !(moveX >= x && moveX <= x+width && moveY >= y && moveY <= y+height)
+		return !(moveX >= x && moveX <= x + width && moveY >= y && moveY <= y + height)
 	}
-	outOfWheel (nativeEvent) {
-		const {radius} = this.polar(nativeEvent)
+	outOfWheel(nativeEvent) {
+		const { radius } = this.polar(nativeEvent)
 		return radius > 1
 	}
-	outOfSlider (nativeEvent) {
+	outOfSlider(nativeEvent) {
 		const row = this.props.row
 		const loc = row ? nativeEvent.locationY : nativeEvent.locationX
-		const {width,height} = this.sliderMeasure
-		return (loc > (row ? height-width : width-height))
+		const { width, height } = this.sliderMeasure
+		return (loc > (row ? height - width : width - height))
 	}
-	val (v) {
-		const d = this.props.discrete, r = 11*Math.round(v/11)
-		return d ? (r>=99?100:r) : v
+	val(v) {
+		const d = this.props.discrete, r = 11 * Math.round(v / 11)
+		return d ? (r >= 99 ? 100 : r) : v
 	}
-	ratio (nativeEvent) {
+	ratio(nativeEvent) {
 		const row = this.props.row
 		const loc = row ? nativeEvent.locationY : nativeEvent.locationX
-		const {width,height} = this.sliderMeasure
-		return 1 - (loc / (row ? height-width : width-height))
+		const { width, height } = this.sliderMeasure
+		return 1 - (loc / (row ? height - width : width - height))
 	}
-	polar (nativeEvent) {
+	polar(nativeEvent) {
 		const lx = nativeEvent.locationX, ly = nativeEvent.locationY
-		const [x, y] = [lx - this.wheelSize/2, ly - this.wheelSize/2]
+		const [x, y] = [lx - this.wheelSize / 2, ly - this.wheelSize / 2]
 		return {
 			deg: Math.atan2(y, x) * (-180 / Math.PI),
 			radius: Math.sqrt(y * y + x * x) / (this.wheelSize / 2),
+			// radius: Math.min(1, Math.max(0, Math.sqrt(y * y + x * x) / (this.wheelSize / 2))), // not working well
 		}
 	}
-	cartesian (deg, radius) {
+	cartesian(deg, radius) {
 		const r = radius * this.wheelSize / 2 // was normalized
 		const rad = Math.PI * deg / 180
 		const x = r * Math.cos(rad)
@@ -407,18 +460,18 @@ module.exports = class ColorPicker extends Component {
 			top: this.wheelSize / 2 - y,
 		}
 	}
-	updateHueSaturation = ({nativeEvent}) => {
-		const {deg, radius} = this.polar(nativeEvent), h = deg, s = 100 * radius, v = this.color.v
+	updateHueSaturation = ({ nativeEvent }) => {
+		const { deg, radius } = this.polar(nativeEvent), h = deg, s = Math.max(0, Math.min(100, 100 * radius)), v = this.color.v
 		// if(radius > 1 ) return
-		const hsv = {h,s,v}// v: 100} // causes bug
-		if(this.props.autoResetSlider === true) {
+		const hsv = { h, s, v }// v: 100} // causes bug
+		if (this.props.autoResetSlider === true) {
 			this.slideX.setValue(0)
 			this.slideY.setValue(0)
 			hsv.v = 100
 		}
 		const currentColor = hsv2Hex(hsv)
 		this.color = hsv
-		this.setState({hsv, currentColor, hueSaturation: hsv2Hex(this.color.h,this.color.s,100)})
+		this.setState({ hsv, currentColor, hueSaturation: hsv2Hex(this.color.h, this.color.s, 100) })
 		this.props.onColorChange(hsv2Hex(hsv))
 		// this.testData.deg = deg
 		// this.testData.radius = radius
@@ -426,113 +479,145 @@ module.exports = class ColorPicker extends Component {
 		// this.testData.pan = JSON.stringify(this.state.pan.getTranslateTransform())
 		// this.testView.forceUpdate()
 	}
-	updateValue = ({nativeEvent}, val) => {
-		const {h,s} = this.color, v = (typeof val == 'number') ? val : 100 * this.ratio(nativeEvent)
-		const hsv = {h,s,v}
+	updateValue = ({ nativeEvent }, val) => {
+		const { h, s } = this.color, v = (typeof val == 'number') ? val : 100 * this.ratio(nativeEvent)
+		const hsv = { h, s, v }
 		const currentColor = hsv2Hex(hsv)
 		this.color = hsv
-		this.setState({hsv, currentColor, hueSaturation: hsv2Hex(this.color.h,this.color.s,100)})
+		this.setState({ hsv, currentColor, hueSaturation: hsv2Hex(this.color.h, this.color.s, 100) })
 		this.props.onColorChange(hsv2Hex(hsv))
 	}
 	update = (color, who, max, force) => {
 		const isHex = /^#(([0-9a-f]{2}){3}|([0-9a-f]){3})$/i
 		if (!isHex.test(color)) color = '#ffffff'
 		color = expandColor(color);
-		const specific = (typeof who == 'string'), who_hs = (who=='hs'), who_v = (who=='v')
-		let {h, s, v} = (typeof color == 'string') ? hex2Hsv(color) : color, stt = {}
-		h = (who_hs||!specific) ? h : this.color.h
-		s = (who_hs && max) ? 100 : (who_hs && max===false) ? 0 : (who_hs||!specific) ? s : this.color.s
-		v = (who_v && max) ? 100 : (who_v && max===false) ? 0 : (who_v||!specific) ? v : this.color.v
+		const specific = (typeof who == 'string'), who_hs = (who == 'hs'), who_v = (who == 'v')
+		let { h, s, v } = (typeof color == 'string') ? hex2Hsv(color) : color, stt = {}
+		h = (who_hs || !specific) ? h : this.color.h
+		s = (who_hs && max) ? 100 : (who_hs && max === false) ? 0 : (who_hs || !specific) ? s : this.color.s
+		v = (who_v && max) ? 100 : (who_v && max === false) ? 0 : (who_v || !specific) ? v : this.color.v
 		const range = (100 - v) / 100 * this.sliderLength
-		const {left, top} = this.cartesian(h, s / 100)
-		const hsv = {h,s,v}
-		if(!specific||force) {
+		const { left, top } = this.cartesian(h, s / 100)
+		const hsv = { h, s, v }
+		if (!specific || force) {
 			this.color = hsv
-			stt.hueSaturation = hsv2Hex(this.color.h,this.color.s,100)
+			stt.hueSaturation = hsv2Hex(this.color.h, this.color.s, 100)
 			// this.setState({hueSaturation: hsv2Hex(this.color.h,this.color.s,100)})
 		}
 		stt.currentColor = hsv2Hex(hsv)
-		this.setState(stt, x=>{ this.tryForceUpdate(); this.renderDiscs(); })
+		this.setState(stt, x => { this.tryForceUpdate(); this.renderDiscs(); })
 		// this.setState({currentColor:hsv2Hex(hsv)}, x=>this.tryForceUpdate())
 		this.props.onColorChange(hsv2Hex(hsv))
 		if (this.props.onColorChangeComplete) this.props.onColorChangeComplete(hsv2Hex(hsv))
-		if(who_hs||!specific) {
+		if (who_hs || !specific) {
 			this.panY.setValue(top)// - this.props.thumbSize / 2)
 			this.panX.setValue(left)// - this.props.thumbSize / 2)
 		}
-		if(who_v||!specific) {
+		if (who_v || !specific) {
 			this.slideX.setValue(range)
 			this.slideY.setValue(range)
 		}
 	}
 	animate = (color, who, max, force) => {
+		const isHex = /^#(([0-9a-f]{2}){3}|([0-9a-f]){3})$/i
+		if (!isHex.test(color)) color = '#ffffff'
 		color = expandColor(color);
-		const specific = (typeof who == 'string'), who_hs = (who=='hs'), who_v = (who=='v')
-		let {h, s, v} = (typeof color == 'string') ? hex2Hsv(color) : color, stt = {}
-		h = (who_hs||!specific) ? h : this.color.h
-		s = (who_hs && max) ? 100 : (who_hs && max===false) ? 0 : (who_hs||!specific) ? s : this.color.s
-		v = (who_v && max) ? 100 : (who_v && max===false) ? 0 : (who_v||!specific) ? v : this.color.v
+		const specific = (typeof who == 'string'), who_hs = (who == 'hs'), who_v = (who == 'v')
+		let { h, s, v } = (typeof color == 'string') ? hex2Hsv(color) : color, stt = {}
+		h = (who_hs || !specific) ? h : this.color.h
+		s = (who_hs && max) ? 100 : (who_hs && max === false) ? 0 : (who_hs || !specific) ? s : this.color.s
+		v = (who_v && max) ? 100 : (who_v && max === false) ? 0 : (who_v || !specific) ? v : this.color.v
 		const range = (100 - v) / 100 * this.sliderLength
-		const {left, top} = this.cartesian(h, s / 100)
-		const hsv = {h,s,v}
+		const { left, top } = this.cartesian(h, s / 100)
+		const hsv = { h, s, v }
 		// console.log(hsv);
-		if(!specific||force) {
+		if (!specific || force) {
 			this.color = hsv
-			stt.hueSaturation = hsv2Hex(this.color.h,this.color.s,100)
+			stt.hueSaturation = hsv2Hex(this.color.h, this.color.s, 100)
 			// this.setState({hueSaturation: hsv2Hex(this.color.h,this.color.s,100)})
 		}
 		stt.currentColor = hsv2Hex(hsv)
-		this.setState(stt, x=>{ this.tryForceUpdate(); this.renderDiscs(); })
+		this.setState(stt, x => { this.tryForceUpdate(); this.renderDiscs(); })
 		// this.setState({currentColor:hsv2Hex(hsv)}, x=>this.tryForceUpdate())
 		this.props.onColorChange(hsv2Hex(hsv))
 		if (this.props.onColorChangeComplete) this.props.onColorChangeComplete(hsv2Hex(hsv))
 		let anims = []
-		if(who_hs||!specific) anims.push(//{//
-			Animated.spring(this.panX, { toValue: left, useNativeDriver: false, friction: 90 }),//.start()//
-			Animated.spring(this.panY, { toValue: top, useNativeDriver: false, friction: 90 }),//.start()//
+		if (who_hs || !specific) anims.push(//{//
+			Animated.spring(this.panX, { toValue: left, useNativeDriver: !!this.props.useNativeDriver, friction: 90 }),//.start()//
+			Animated.spring(this.panY, { toValue: top, useNativeDriver: !!this.props.useNativeDriver, friction: 90 }),//.start()//
 		)//}//
-		if(who_v||!specific) anims.push(//{//
-			Animated.spring(this.slideX, { toValue: range, useNativeDriver: false, friction: 90 }),//.start()//
-			Animated.spring(this.slideY, { toValue: range, useNativeDriver: false, friction: 90 }),//.start()//
+		if (who_v || !specific) anims.push(//{//
+			Animated.spring(this.slideX, { toValue: range, useNativeDriver: !!this.props.useNativeDriver, friction: 90 }),//.start()//
+			Animated.spring(this.slideY, { toValue: range, useNativeDriver: !!this.props.useNativeDriver, friction: 90 }),//.start()//
 		)//}//
 		Animated.parallel(anims).start()
 	}
-	// componentWillReceiveProps(nextProps) {
+	// componentWillReceiveProps(nextProps) { // DEPRICATED
 	// 	const { color } = nextProps
 	// 	if(color !== this.props.color) this.animate(color)
 	// }
+	static getDerivedStateFromProps(nextProps, prevState) {
+		const { palette, discreteLength, swatchesHitSlop } = nextProps
+		const now = Date.now()
+		const payload = {}
+		if (
+			(Array.isArray(palette) && Array.isArray(prevState.palette) && palette.join('-') !== prevState.palette.join('-'))
+			|| swatchesHitSlop !== prevState.swatchesHitSlop
+		) {
+			payload.palette = palette
+			payload.swatchesHitSlop = swatchesHitSlop
+			payload.swatchesUpdatedAt = now
+		}
+		if (discreteLength !== prevState.discreteLength || swatchesHitSlop !== prevState.swatchesHitSlop) {
+			payload.discreteLength = discreteLength
+			payload.swatchesHitSlop = swatchesHitSlop
+			payload.discsUpdatedAt = now
+		}
+		return Object.keys(payload).length > 0 ? payload : null
+	}
 	componentDidUpdate(prevProps) {
 		const { color } = this.props
-		if(color !== prevProps.color) this.animate(color)
+		if (color !== prevProps.color) this.animate(color)
 	}
 	revert() {
-		if(this.mounted) this.animate(this.props.color)
+		if (this.mounted) this.animate(this.props.color)
 	}
-	tryForceUpdate () {
-		if(this.mounted) this.forceUpdate()
+	tryForceUpdate() {
+		if (this.mounted) this.forceUpdate()
 	}
-	renderSwatches () {
-		this.swatches = this.props.palette.map((c,i) => (
-			<View style={[ss.swatch,{backgroundColor:c}]} key={'S'+i} hitSlop={this.props.swatchesHitSlop}>
-				<TouchableWithoutFeedback onPress={x=>this.onSwatchPress(c,i)} hitSlop={this.props.swatchesHitSlop}>
-					<Animated.View style={[ss.swatchTouch,{backgroundColor:c,transform:[{scale:this.swatchAnim[i].interpolate({inputRange:[0,0.5,1],outputRange:[0.666,1,0.666]})}]}]} />
+	initSwatchAnimatedValues(props) {
+		this.swatchAnim = props.palette.map((c, i) => (new Animated.Value(0)))
+	}
+	initDiscAnimatedValues(props) {
+		const length = Math.max(props.discreteLength, 2)
+		this.discAnim = (`1`).repeat(length).split('').map((c, i) => (new Animated.Value(0)))
+	}
+	renderSwatches() {
+		// console.log('RENDER SWATCHES >>', this.props.palette)
+		this.swatchesUpdatedAt = this.state.swatchesUpdatedAt
+		this.swatches = this.props.palette.map((c, i) => (
+			<View style={[ss.swatch, { backgroundColor: c }]} key={'S' + i} hitSlop={this.props.swatchesHitSlop}>
+				<TouchableWithoutFeedback onPress={x => this.onSwatchPress(c, i)} hitSlop={this.props.swatchesHitSlop}>
+					<Animated.View style={[ss.swatchTouch, { backgroundColor: c, transform: [{ scale: this.swatchAnim[i].interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.666, 1, 0.666] }) }] }]} />
 				</TouchableWithoutFeedback>
 			</View>
 		))
 	}
-	renderDiscs () {
-		this.disc = (`1`).repeat(this.props.discreteLength).split('').map((c,i) => (
-			<View style={[ss.swatch,{backgroundColor:this.state.hueSaturation}]} key={'D'+i} hitSlop={this.props.swatchesHitSlop}>
-				<TouchableWithoutFeedback onPress={x=>this.onDiscPress(c,i)} hitSlop={this.props.swatchesHitSlop}>
-					<Animated.View style={[ss.swatchTouch,{backgroundColor:this.state.hueSaturation,transform:[{scale:this.discAnim[i].interpolate({inputRange:[0,0.5,1],outputRange:[0.666,1,0.666]})}]}]}>
-						<View style={[ss.wheelImg,{backgroundColor:'#000',opacity:1-(i>=9?1:(i*11/100))}]}></View>
+	renderDiscs() {
+		this.discsUpdatedAt = this.state.discsUpdatedAt
+		const length = Math.max(this.props.discreteLength, 2)
+		this.disc = (`1`).repeat(length).split('').map((c, i) => (
+			<View style={[ss.swatch, { backgroundColor: this.state.hueSaturation }]} key={'D' + i} hitSlop={this.props.swatchesHitSlop}>
+				<TouchableWithoutFeedback onPress={x => this.onDiscPress(c, i)} hitSlop={this.props.swatchesHitSlop}>
+					<Animated.View style={[ss.swatchTouch, { backgroundColor: this.state.hueSaturation, transform: [{ scale: this.discAnim[i].interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.666, 1, 0.666] }) }] }]}>
+						<View style={[ss.wheelImg, { backgroundColor: '#000', opacity: 1 - (i >= (length-1) ? 1 : (i * 1/(length-1))) }]}></View>
 					</Animated.View>
 				</TouchableWithoutFeedback>
 			</View>
 		)).reverse()
 		this.tryForceUpdate()
 	}
-	render () {
+	render() {
 		const {
 			style,
 			thumbSize,
@@ -543,9 +628,10 @@ module.exports = class ColorPicker extends Component {
 			sliderHidden,
 			discrete,
 			row,
+			wheelHidden,
 		} = this.props
 		const swatches = !!(this.props.swatches || swatchesOnly)
-		const hsv = hsv2Hex(this.color), hex = hsv2Hex(this.color.h,this.color.s,100)
+		const hsv = hsv2Hex(this.color), hex = hsv2Hex(this.color.h, this.color.s, 100)
 		const wheelPanHandlers = this.wheelPanResponder && this.wheelPanResponder.panHandlers || {}
 		const sliderPanHandlers = this.sliderPanResponder && this.sliderPanResponder.panHandlers || {}
 		const opacity = this.state.wheelOpacity// * this.state.sliderOpacity
@@ -554,10 +640,10 @@ module.exports = class ColorPicker extends Component {
 			width: thumbSize,
 			height: thumbSize,
 			borderRadius: thumbSize / 2,
-			backgroundColor: this.props.shadeWheelThumb === true ? hsv: hex,
-			transform: [{translateX:-thumbSize/2},{translateY:-thumbSize/2}],
-			left: this.panX,
-			top: this.panY,
+			backgroundColor: this.props.shadeWheelThumb === true ? hsv : hex,
+			transform: [{ translateX: (!!this.props.flipTouchX ? 1 : -1) * thumbSize / 2 }, { translateY: (!!this.props.flipTouchY ? 1 : -1) * thumbSize / 2 }],
+			[!!this.props.flipTouchX ? 'right' : 'left']: this.panX,
+			[!!this.props.flipTouchY ? 'bottom' : 'top']: this.panY,
 			opacity,
 			////
 			// transform: [{translateX:this.panX},{translateY:this.panY}],
@@ -566,56 +652,71 @@ module.exports = class ColorPicker extends Component {
 			// zIndex: 2,
 		}
 		const sliderThumbStyle = {
-			left: row?0:this.slideX,
-			top: row?this.slideY:0,
+			[!!this.props.flipTouchX ? 'right' : 'left']: row ? 0 : this.slideX,
+			[!!this.props.flipTouchY ? 'bottom' : 'top']: row ? this.slideY : 0,
 			// transform: [row?{translateX:8}:{translateY:8}],
-			backgroundColor: this.props.shadeSliderThumb === true ? hsv: hex,
-			borderRadius: sliderSize/2,
+			backgroundColor: this.props.shadeSliderThumb === true ? hsv : hex,
+			borderRadius: sliderSize / 2,
 			height: sliderSize,
 			width: sliderSize,
 			opacity,
 		}
 		const sliderStyle = {
-			width:row?sliderSize:'100%',
-			height:row?'100%':sliderSize,
-			marginLeft:row?gapSize:0,
-			marginTop:row?0:gapSize,
-			borderRadius:sliderSize/2,
+			width: row ? sliderSize : '100%',
+			height: row ? '100%' : sliderSize,
+			marginLeft: row ? gapSize : 0,
+			marginTop: row ? 0 : gapSize,
+			borderRadius: sliderSize / 2,
 		}
 		const swatchStyle = {
-			flexDirection:row?'column':'row',
-			width:row?20:'100%',
-			height:row?'100%':20,
-			marginLeft:row?margin:0,
-			marginTop:row?0:margin,
+			flexDirection: row ? 'column' : 'row',
+			width: row ? 20 : '100%',
+			height: row ? '100%' : 20,
+			marginLeft: row ? margin : 0,
+			marginTop: row ? 0 : margin,
 		}
 		const swatchFirstStyle = {
-			marginTop:0,
-			marginLeft:0,
-			marginRight:row?margin:0,
-			marginBottom:row?0:margin,
+			marginTop: 0,
+			marginLeft: 0,
+			marginRight: row ? margin : 0,
+			marginBottom: row ? 0 : margin,
+		}
+		if (this.state.swatchesUpdatedAt !== this.swatchesUpdatedAt) {
+			this.initSwatchAnimatedValues(this.props)
+			this.renderSwatches()
+		}
+		if (this.state.discsUpdatedAt !== this.discsUpdatedAt) {
+			this.initDiscAnimatedValues(this.props)
+			this.renderDiscs()
 		}
 		// console.log('RENDER >>',row,thumbSize,sliderSize)
 		return (
-			<View style={[ss.root,row?{flexDirection:'row'}:{},style]}>
-				{ swatches && !swatchesLast && <View style={[ss.swatches,swatchStyle,swatchFirstStyle]} key={'SW'}>{ this.swatches }</View> }
-				{ !swatchesOnly && <View style={[ss.wheel]} key={'$1'} onLayout={this.onSquareLayout}>
-					{ this.wheelWidth>0 && <View style={[{padding:thumbSize/2,width:this.wheelWidth,height:this.wheelWidth}]}>
+			<View style={[ss.root, row ? { flexDirection: 'row' } : {}, style]}>
+				{swatches && !swatchesLast && <View style={[ss.swatches, swatchStyle, swatchFirstStyle]} key={'SW'}>{this.swatches}</View>}
+				{!swatchesOnly && !(wheelHidden && !sliderHidden) && <View style={[ss.wheel]} key={'$1'} onLayout={this.onSquareLayout}>
+					{this.wheelWidth > 0 && <View style={[{ padding: thumbSize / 2, width: this.wheelWidth, height: this.wheelWidth }]} key={'$1$1'}>
 						<View style={[ss.wheelWrap]}>
-							<Image style={ss.wheelImg} source={srcWheel} />
-							<Animated.View style={[ss.wheelThumb,wheelThumbStyle,Elevations[4],{pointerEvents:'none'}]} />
-							<View style={[ss.cover]} onLayout={this.onWheelLayout} {...wheelPanHandlers} ref={r => { this.wheel = r }}></View>
+							<Image style={[ss.wheelImg, { opacity: !this.props.wheelLoadingIndicator || this.state.wheelImageLoaded ? 1 : 0 }]} key={'$1$1$1'} source={srcWheel} onLoad={this.onWheelImageLoad} />
+							{(this.props.wheelLoadingIndicator ? this.state.wheelImageLoaded : true) && <Animated.View style={[ss.wheelThumb, wheelThumbStyle, Elevations[4], { pointerEvents: 'none' }]} key={'$1$1$2'} />}
+							<View style={[ss.cover]} key={'$1$1$3'} onLayout={this.onWheelLayout} {...wheelPanHandlers} ref={r => { this.wheel = r }}>
+								{!!this.props.wheelLoadingIndicator && !this.state.wheelImageLoaded && this.props.wheelLoadingIndicator}
+							</View>
 						</View>
-					</View> }
-				</View> }
-				{ !swatchesOnly && !sliderHidden && (discrete ? <View style={[ss.swatches,swatchStyle]} key={'$2'}>{ this.disc }</View> : <View style={[ss.slider,sliderStyle]} key={'$2'}>
-					<View style={[ss.grad,{backgroundColor:hex}]}>
-						<Image style={ss.sliderImg} source={row?srcSliderRotated:srcSlider} resizeMode="stretch" />
+					</View>}
+				</View>}
+				{!swatchesOnly && !sliderHidden && (discrete
+					? <View style={[ss.swatches, swatchStyle]} key={'$2'}>{this.disc}</View>
+					: <View style={[ss.slider, sliderStyle]} key={'$2'}>
+						<View style={[ss.grad, { backgroundColor: hex }]} key={'$2$1'}>
+							<Image style={[ss.sliderImg, { opacity: !this.props.sliderLoadingIndicator || this.state.sliderImageLoaded ? 1 : 0 }]} source={row ? srcSliderRotated : srcSlider} onLoad={this.onSliderImageLoad} resizeMode="stretch" />
+						</View>
+						{(this.props.sliderLoadingIndicator ? this.state.sliderImageLoaded : true) && <Animated.View style={[ss.sliderThumb, sliderThumbStyle, Elevations[4], { pointerEvents: 'none' }]} key={'$2$2'} />}
+						<View style={[ss.cover]} key={'$2$3'} onLayout={this.onSliderLayout} {...sliderPanHandlers} ref={r => { this.slider = r }}>
+							{!!this.props.sliderLoadingIndicator && !this.state.sliderImageLoaded && this.props.sliderLoadingIndicator}
+						</View>
 					</View>
-					<Animated.View style={[ss.sliderThumb,sliderThumbStyle,Elevations[4],{pointerEvents:'none'}]} />
-					<View style={[ss.cover]} onLayout={this.onSliderLayout} {...sliderPanHandlers} ref={r => { this.slider = r }}></View>
-				</View>) }
-				{ swatches && swatchesLast && <View style={[ss.swatches,swatchStyle]} key={'SW'}>{ this.swatches }</View> }
+				)}
+				{swatches && swatchesLast && <View style={[ss.swatches, swatchStyle]} key={'SW'}>{this.swatches}</View>}
 			</View>
 		)
 	}
@@ -660,7 +761,7 @@ const ss = StyleSheet.create({
 		borderColor: '#EEEEEE',
 		elevation: 4,
 		shadowColor: 'rgb(46, 48, 58)',
-		shadowOffset: {width: 0, height: 2},
+		shadowOffset: { width: 0, height: 2 },
 		shadowOpacity: 0.8,
 		shadowRadius: 2,
 	},
@@ -671,6 +772,8 @@ const ss = StyleSheet.create({
 		width: '100%',
 		height: '100%',
 		// backgroundColor: '#ccccff88',
+		alignItems: 'center',
+		justifyContent: 'center',
 	},
 	slider: {
 		width: '100%',
@@ -687,8 +790,6 @@ const ss = StyleSheet.create({
 	},
 	sliderThumb: {
 		position: 'absolute',
-		top: 0,
-		left: 0,
 		borderWidth: 2,
 		borderColor: '#EEEEEE',
 		elevation: 4,
