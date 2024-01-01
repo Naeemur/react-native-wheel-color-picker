@@ -60,6 +60,10 @@ export default App
 
 ## Changelog
 
+### 1.3.1
+- fixed a bug related to `useNativeDriver`
+- no breaking changes
+
 ### 1.3.0
 - added changelog section to README.md
 - prop added: `wheelLoadingIndicator`
