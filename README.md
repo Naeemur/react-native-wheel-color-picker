@@ -136,7 +136,7 @@ export default App
 
 `sliderLoadingIndicator: null` slider image loading component eg: <ActivityIndicator />
 
-`useNativeDriver: false` to use useNativeDriver for animations
+`useNativeDriver: false` to use useNativeDriver for animations if possible
 
 `useNativeLayout: false` to use onLayoutEvent.nativeEvent.layout instead of measureInWindow for x, y, width, height values for wheel and slider measurements which may be useful to prevent some layout problems
 

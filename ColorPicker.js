@@ -192,7 +192,7 @@ module.exports = class ColorPicker extends Component {
 		onColorChangeComplete: () => { }, // callback function providing final color when user stops dragging slider/wheel
 		wheelLoadingIndicator: null, // wheel image loading component eg: <ActivityIndicator />
 		sliderLoadingIndicator: null, // slider image loading component eg: <ActivityIndicator />
-		useNativeDriver: false, // to use useNativeDriver for animations
+		useNativeDriver: false, // to use useNativeDriver for animations if possible
 		useNativeLayout: false, // to use onLayoutEvent.nativeEvent.layout instead of measureInWindow for x, y, width, height values for wheel and slider measurements which may be useful to prevent some layout problems
 		disabled: false, // disable all interactions
 		flipTouchX: false, // flip touch positioning on X axis, might be useful in UI with RTL support
@@ -310,7 +310,7 @@ module.exports = class ColorPicker extends Component {
 				null,
 			],
 			{
-				useNativeDriver: !!props.useNativeDriver,
+				useNativeDriver: false,
 				listener: this.updateHueSaturation
 			}
 		)
@@ -325,7 +325,7 @@ module.exports = class ColorPicker extends Component {
 				null,
 			],
 			{
-				useNativeDriver: !!props.useNativeDriver,
+				useNativeDriver: false,
 				listener: this.updateValue
 			}
 		)
@@ -345,7 +345,7 @@ module.exports = class ColorPicker extends Component {
 		this.swatchAnim[i].stopAnimation()
 		Animated.timing(this.swatchAnim[i], {
 			toValue: 1,
-			useNativeDriver: !!this.props.useNativeDriver,
+			useNativeDriver: false,
 			duration: 500,
 		}).start(x => {
 			this.swatchAnim[i].setValue(0)
@@ -357,7 +357,7 @@ module.exports = class ColorPicker extends Component {
 		this.discAnim[i].stopAnimation()
 		Animated.timing(this.discAnim[i], {
 			toValue: 1,
-			useNativeDriver: !!this.props.useNativeDriver,
+			useNativeDriver: false,
 			duration: 500,
 		}).start(x => {
 			this.discAnim[i].setValue(0)
@@ -543,12 +543,12 @@ module.exports = class ColorPicker extends Component {
 		if (this.props.onColorChangeComplete) this.props.onColorChangeComplete(hsv2Hex(hsv))
 		let anims = []
 		if (who_hs || !specific) anims.push(//{//
-			Animated.spring(this.panX, { toValue: left, useNativeDriver: !!this.props.useNativeDriver, friction: 90 }),//.start()//
-			Animated.spring(this.panY, { toValue: top, useNativeDriver: !!this.props.useNativeDriver, friction: 90 }),//.start()//
+			Animated.spring(this.panX, { toValue: left, useNativeDriver: false, friction: 90 }),//.start()//
+			Animated.spring(this.panY, { toValue: top, useNativeDriver: false, friction: 90 }),//.start()//
 		)//}//
 		if (who_v || !specific) anims.push(//{//
-			Animated.spring(this.slideX, { toValue: range, useNativeDriver: !!this.props.useNativeDriver, friction: 90 }),//.start()//
-			Animated.spring(this.slideY, { toValue: range, useNativeDriver: !!this.props.useNativeDriver, friction: 90 }),//.start()//
+			Animated.spring(this.slideX, { toValue: range, useNativeDriver: false, friction: 90 }),//.start()//
+			Animated.spring(this.slideY, { toValue: range, useNativeDriver: false, friction: 90 }),//.start()//
 		)//}//
 		Animated.parallel(anims).start()
 	}

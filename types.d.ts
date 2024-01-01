@@ -45,7 +45,7 @@ export interface ColorPickerProps extends React.Props<ColorPicker> {
   wheelLoadingIndicator?: React.ReactNode,
   /** Slider image loading component eg: <ActivityIndicator /> */
   sliderLoadingIndicator?: React.ReactNode,
-  /** To use useNativeDriver for animations */
+  /** To use useNativeDriver for animations if possible */
   useNativeDriver?: boolean,
   /** To use onLayoutEvent.nativeEvent.layout instead of measureInWindow for x, y, width, height values for wheel and slider measurements which may be useful to prevent some layout problems */
   useNativeLayout?: boolean,
