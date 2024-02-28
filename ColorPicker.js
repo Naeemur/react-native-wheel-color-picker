@@ -736,11 +736,13 @@ const ss = StyleSheet.create({
 		flex: 1,
 		justifyContent: 'center',
 		alignItems: 'center',
-		position: 'relative',
+		position: 'absolute',
+		top: -70,
+		left: -30,
 		overflow: 'visible',
 		width: '100%',
-		minWidth: 200,
-		minHeight: 200,
+		minWidth: 150,
+		minHeight: 150,
 		// aspectRatio: 1,
 		// backgroundColor: '#ffccff',
 	},
@@ -778,7 +780,7 @@ const ss = StyleSheet.create({
 	slider: {
 		width: '100%',
 		// height: 32,
-		marginTop: 16,
+		marginTop: 32,
 		// overflow: 'hidden',
 		flexDirection: 'column-reverse',
 		// elevation: 4,
@@ -796,15 +798,15 @@ const ss = StyleSheet.create({
 		// backgroundColor: '#f00',
 	},
 	grad: {
-		borderRadius: 100,
+		borderRadius: 150,
 		overflow: "hidden",
 		height: '100%',
 	},
 	swatches: {
 		width: '100%',
-		flexDirection: 'row',
+		// flexDirection: 'row',
 		justifyContent: 'space-between',
-		marginTop: 16,
+		paddingTop: 80,
 		// padding: 16,
 	},
 	swatch: {
@@ -816,6 +818,7 @@ const ss = StyleSheet.create({
 		alignItems: 'center',
 		justifyContent: 'center',
 		overflow: 'visible',
+		marginTop: 12,
 	},
 	swatchTouch: {
 		width: 30,
@@ -825,3 +828,4 @@ const ss = StyleSheet.create({
 		overflow: 'hidden',
 	},
 })
+
