@@ -364,7 +364,7 @@ module.exports = class ColorPicker extends Component {
 		})
 		const val = i >= 9 ? 100 : 11 * i
 		this.updateValue({ nativeEvent: null }, val)
-		this.animate({ h: this.color.h, s: this.color.s, v: val }, 'v')
+		this.animate({ h: this.color.h, s: this.color.s, v: val }, 'hs')
 	}
 	onSquareLayout = (e) => {
 		let { x, y, width, height } = e.nativeEvent.layout
